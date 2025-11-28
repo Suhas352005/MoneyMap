@@ -1,7 +1,7 @@
 {
-  "name": "Spending Tracker",
+  "name": "MoneyMap",
   "short_name": "Spends",
-  "start_url": "spending-tracker.html",
+  "start_url": "MoneyMap.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#020617",
@@ -19,3 +19,4 @@
     }
   ]
 }
+
