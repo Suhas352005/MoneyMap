@@ -607,13 +607,12 @@ function exportData() {
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
-      .register("sw.js")
+      .register("/MoneyMap/sw.js")
       .catch((err) =>
         console.log("Service worker registration failed:", err)
       );
   }
 }
-
 // ====== EVENT BINDING ======
 function setupEventListeners() {
   const form = document.getElementById("expenseForm");
@@ -739,3 +738,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
