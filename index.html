@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MoneyMap</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#020617" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+  <!-- App JS -->
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title-block">
+        <h1>
+          MoneyMap 
+          <span class="pill">v1.2</span>
+        </h1>
+        <div class="subtitle">
+          Track daily, monthly, category spends & balance.
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="badge-today" id="todayLabel">Today</div>
+        <button type="button" class="btn-outline" id="themeToggleBtn">
+          <span id="themeToggleIcon">🌙</span>
+          Theme
+        </button>
+      </div>
+    </header>
+
+    <div class="filter-bar">
+      <span>Month:</span>
+      <input type="month" id="monthFilter" />
+      <span>Category:</span>
+      <select id="categoryFilter">
+        <option value="__all__">All</option>
+      </select>
+    </div>
+
+    <div class="layout-grid">
+      <!-- LEFT: Add Expense + Summary -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Add expense</div>
+            <div class="card-subtitle">Quickly log where your money goes.</div>
+          </div>
+        </div>
+
+        <form id="expenseForm">
+          <div class="input-row">
+            <div class="input-group">
+              <label for="amount">Amount (₹)</label>
+              <input
+                type="number"
+                id="amount"
+                min="0"
+                step="0.01"
+                required
+                placeholder="e.g. 150"
+              />
+            </div>
+            <div class="input-group">
+              <label for="date">Date</label>
+              <input type="date" id="date" required />
+            </div>
+          </div>
+
+          <div class="input-row" style="margin-top: 6px">
+            <div class="input-group">
+              <label for="category">Category</label>
+              <select id="category" required>
+                <option value="" disabled selected>Select category</option>
+                <option>Food</option>
+                <option>Travel</option>
+                <option>Shopping</option>
+                <option>Entertainment</option>
+                <option>Bills</option>
+                <option>Education</option>
+                <option>Health</option>
+                <option>Savings</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="note">Note (optional)</label>
+              <input id="note" placeholder="e.g. Lunch with friends" />
+            </div>
+          </div>
+
+          <div class="primary-row">
+            <button type="button" class="btn-outline" id="fillTodayBtn">
+              <span class="btn-icon">📅</span>Today
+            </button>
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">➕</span>Add Expense
+            </button>
+          </div>
+        </form>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Today spent</div>
+            <div class="summary-value" id="todayTotal">₹0</div>
+            <div class="summary-chip">Based on today's date</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Selected month</div>
+            <div class="summary-value summary-accent" id="monthTotal">₹0</div>
+            <div class="summary-chip">
+              <span class="chip-soft">
+                <span class="chip-soft-dot"></span>
+                <span id="monthNameLabel">This month</span>
+              </span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">All time</div>
+            <div class="summary-value" id="overallTotal">₹0</div>
+            <div class="summary-chip" id="totalEntriesLabel">0 entries logged</div>
+          </div>
+          <div class="summary-card" id="balanceCard">
+            <div class="summary-label">Balance (month)</div>
+            <div class="summary-value" id="balanceAmount">₹0</div>
+            <div class="summary-chip">
+              <span id="incomeChip">Income: Not set</span>
+              ·
+              <span id="spentChip">Spent: ₹0</span>
+              ·
+              <span class="small-link" id="setIncomeLink">Set income</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="limit-banner" id="limitBanner">
+          <span class="dot"></span>
+          <span>
+            <strong>Monthly limit</strong> –
+            <span id="limitText">Not set</span>
+          </span>
+          <button
+            type="button"
+            class="btn-outline"
+            style="margin-left: auto"
+            id="setLimitBtn"
+          >
+            Set / Edit
+          </button>
+        </div>
+      </section>
+
+      <!-- RIGHT: Charts + Categories -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Insights</div>
+            <div class="card-subtitle">
+              Visualize where your money goes.
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div>
+            <div class="card-subtitle" style="margin-bottom: 4px">
+              Daily spending (selected month
+              <span id="categoryFilterLabel">· all categories</span>)
+            </div>
+            <div class="chart-container">
+              <canvas id="dailyChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <div class="card-subtitle" style="margin-bottom: 4px">
+              Category distribution (selected month)
+            </div>
+            <div class="chart-container">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-list" id="categoryList"></div>
+      </section>
+    </div>
+
+    <!-- Transactions -->
+    <section class="card transactions-card">
+      <div class="transactions-header">
+        <div>
+          <div class="card-title">Transactions</div>
+          <div class="card-subtitle">
+            Filtered by selected category. Latest first.
+          </div>
+        </div>
+        <button type="button" class="btn-outline" id="clearAllBtn">
+          🧹 Clear all
+        </button>
+      </div>
+
+      <div class="transactions-list" id="transactionsContainer">
+        <div class="empty-state" id="emptyState">
+          No expenses yet. Add your first one above ✨
+        </div>
+        <table id="transactionsTable" style="display: none">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Note</th>
+              <th>Amount (₹)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="transactionsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <span>
+        💾 Data is stored locally in your browser (localStorage).
+      </span>
+      <span class="small-link" id="exportBtn">
+        ⬇️ Export data (JSON)
+      </span>
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="dot"></span>
+    <span id="toastMessage">Toast message</span>
+  </div>
+</body>
+</html>
